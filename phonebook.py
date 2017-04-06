@@ -34,6 +34,7 @@ def create_contact():
         print("Contact with the same name can't be created")
 
 
+
 def read_contact():
     name, phone_exist = check_contact()
     if phone_exist == True:
@@ -57,9 +58,22 @@ def delete_contact():
         print("Contact with name ", name, " has been removed")
 
 
-def display_results(param):
-    if param !=None:
-        print(param)
+def display_results():
+    print(read_contact())
+
+
+def alter_choose_operation():
+    execute = False
+    OPERATIONS = {'C': create_contact, 'R': display_results,
+                  'U': update_contact, 'D': delete_contact, 'Q': quit }
+    while True:
+        operation = input_values("Enter operation type: ")
+        for oper in OPERATIONS:
+            if operation == oper:
+                execute = OPERATIONS[oper]
+                execute()
+        if execute == False:
+            print(operation, "is unsupported operation. Please choose operation from C R U D")
 
 
 def choose_operation():
@@ -68,7 +82,7 @@ def choose_operation():
         if operation == "C":
             create_contact()
         elif operation == "R":
-            display_results(read_contact())
+            display_results()
         elif operation == "U":
             update_contact()
         elif operation == 'D':
@@ -115,20 +129,7 @@ def read_from_file():
         return {}
 
 
-# def read_from_file_csv():
-#     try:
-#         with open('f.csv', 'rt') as csv_file:
-#             reader = csv.reader(csv_file)
-#             contacts = dict(reader)
-#             return contacts
-#     except FileNotFoundError:
-#         print("Oops, file is absent")
-#         return {}
-
 
 contacts = read_from_file()
-choose_operation()
-
-
-w = csv.writer(f)
-#     w.writerow(('aa aa', 1234))
+#choose_operation()
+alter_choose_operation()

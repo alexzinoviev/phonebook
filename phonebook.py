@@ -1,4 +1,4 @@
-import json, csv
+import json, csv, configparser
 
 def input_values(param):
     return input(param)
@@ -80,22 +80,50 @@ def choose_operation():
             continue
 
 
+def read_config():
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    file_type = config['DEFAULT']['file_type']
+    return file_type
+
+
 def save_into_file(name):
-    with open('f.json', 'wt') as json_file:
-        json.dump(contacts, json_file)
-    with open('f.csv', 'wt') as csv_file:
-        w = csv.writer(csv_file)
-        w.writerow({contacts[name],name})
+    file_type = read_config()
+    if file_type == 'json':
+        with open('f.json', 'wt') as json_file:
+            json.dump(contacts, json_file)
+    elif file_type == 'csv':
+        with open('f.csv', 'w') as csv_file:
+            writer = csv.writer(csv_file)
+            for key, value in contacts.items():
+                writer.writerow([key, value])
 
 
 def read_from_file():
+    file_type = read_config()
     try:
-        with open('f.json', 'rt') as file:
-            return json.load(file)
+        if file_type == 'json':
+            with open('f.json', 'rt') as file:
+                return json.load(file)
+        elif file_type == 'csv':
+            with open('f.csv', 'rt') as csv_file:
+                reader = csv.reader(csv_file)
+                contacts = dict(reader)
+                return contacts
     except FileNotFoundError:
         print("Oops, file is absent")
         return {}
 
+
+# def read_from_file_csv():
+#     try:
+#         with open('f.csv', 'rt') as csv_file:
+#             reader = csv.reader(csv_file)
+#             contacts = dict(reader)
+#             return contacts
+#     except FileNotFoundError:
+#         print("Oops, file is absent")
+#         return {}
 
 
 contacts = read_from_file()

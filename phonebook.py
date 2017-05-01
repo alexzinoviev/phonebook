@@ -1,135 +1,133 @@
-import json, csv, configparser
+import json
+import csv
+import configparser
 
-def input_values(param):
-    return input(param)
+contacts = {}
 
+class Controller:
+    def read_config(self):
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        file_type = config['DEFAULT']['file_type']
+        return file_type
 
-def input_name():
-    return input_values("Please enter Name: ")
+    def read_from_file(self):
+        file_type = self.read_config(self)
+        if file_type == 'json':
+            return JSONFile.read_from_file(JSONFile)
+        elif file_type == 'csv':
+            return CSVFile.read_from_file(CSVFile)
 
+    def save_into_file(self, name):
+        file_type = self.read_config(self)
+        if file_type == 'json':
+            JSONFile.save_into_file(JSONFile, name)
+        elif file_type == 'csv':
+            CSVFile.save_into_file(CSVFile, name)
 
-def input_phone():
-    return input_values("Please enter Phone: ")
-
-
-def check_contact():
-    name = input_name()
-    if name in contacts:
-        phone_exist = True
-        return name, phone_exist
-    else:
-        phone_exist = False
-        print("This contact is absent in Phone Book")
-        return name, phone_exist
-
-
-def create_contact():
-    name, phone_exist = check_contact()
-    if phone_exist == False:
-        phone = input_phone()
-        contacts[name] = phone
-        save_into_file(name)
-        print("Contact", name, "with phone:", phone, "created in phone book")
-    elif phone_exist == True:
-        print("Contact with the same name can't be created")
-
-
-
-def read_contact():
-    name, phone_exist = check_contact()
-    if phone_exist == True:
-        return name, contacts[name]
+    def choose_operation(self):
+        execute = False
+        OPERATIONS = {'C': Operations.create_contact, 'R': Operations.display_results,
+                      'U': Operations.update_contact, 'D': Operations.delete_contact, 'Q': quit}
+        while True:
+            operation = Operations.input_values(self, "Enter operation type: ")
+            for oper in OPERATIONS:
+                if operation == oper:
+                    execute = OPERATIONS[oper]
+                    execute(self)
+            if execute == False:
+                print(operation, "is unsupported operation. Please choose operation from C R U D")
 
 
-def update_contact():
-    name, phone_exist = check_contact()
-    if phone_exist == True:
-        phone = input_phone()
-        contacts[name] = phone
-        save_into_file(name)
-        print("Contact", name, "has been updated with phone:", phone)
-
-
-def delete_contact():
-    name, phone_exist = check_contact()
-    if phone_exist == True:
-        contacts.pop(name)
-        save_into_file(name)
-        print("Contact with name ", name, " has been removed")
-
-
-def display_results():
-    print(read_contact())
-
-
-def alter_choose_operation():
-    execute = False
-    OPERATIONS = {'C': create_contact, 'R': display_results,
-                  'U': update_contact, 'D': delete_contact, 'Q': quit }
-    while True:
-        operation = input_values("Enter operation type: ")
-        for oper in OPERATIONS:
-            if operation == oper:
-                execute = OPERATIONS[oper]
-                execute()
-        if execute == False:
-            print(operation, "is unsupported operation. Please choose operation from C R U D")
-
-
-def choose_operation():
-    while True:
-        operation = input_values("Enter operation type: ")
-        if operation == "C":
-            create_contact()
-        elif operation == "R":
-            display_results()
-        elif operation == "U":
-            update_contact()
-        elif operation == 'D':
-            delete_contact()
-        elif operation == 'Q':
-            quit()
-        else:
-            print(operation, "is unsupported operation. Please choose operation from C R U D")
-            continue
-
-
-def read_config():
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    file_type = config['DEFAULT']['file_type']
-    return file_type
-
-
-def save_into_file(name):
-    file_type = read_config()
-    if file_type == 'json':
-        with open('f.json', 'wt') as json_file:
-            json.dump(contacts, json_file)
-    elif file_type == 'csv':
+class CSVFile(Controller):
+    def save_into_file(self, name):
         with open('f.csv', 'w') as csv_file:
             writer = csv.writer(csv_file)
             for key, value in contacts.items():
                 writer.writerow([key, value])
 
-
-def read_from_file():
-    file_type = read_config()
-    try:
-        if file_type == 'json':
-            with open('f.json', 'rt') as file:
-                return json.load(file)
-        elif file_type == 'csv':
+    def read_from_file(self):
+        try:
             with open('f.csv', 'rt') as csv_file:
                 reader = csv.reader(csv_file)
-                contacts = dict(reader)
-                return contacts
-    except FileNotFoundError:
-        print("Oops, file is absent")
-        return {}
+                return dict(reader)
+        except FileNotFoundError:
+            print("Oops, file is absent")
+            return {}
 
 
+class JSONFile(Controller):
+    def save_into_file(self, name):
+        with open('f.json', 'wt') as json_file:
+            json.dump(contacts, json_file)
 
-contacts = read_from_file()
-#choose_operation()
-alter_choose_operation()
+    def read_from_file(self):
+        try:
+            with open('f.json', 'rt') as file:
+                return json.load(file)
+        except FileNotFoundError:
+            print("Oops, file is absent")
+            return {}
+
+
+class Operations:
+    def input_values(self, param):
+        return input(param)
+
+    def input_name(self):
+        return Operations.input_values(self, "Please enter Name: ")
+
+    def input_phone(self):
+        return Operations.input_values(self, "Please enter Phone: ")
+
+    def check_contact(self):
+        name = Operations.input_name(self)
+        if name in contacts:
+            phone_exist = True
+            return name, phone_exist
+        else:
+            phone_exist = False
+            print("This contact is absent in Phone Book")
+            return name, phone_exist
+
+    def create_contact(self):
+        name, phone_exist = Operations.check_contact(self)
+        if phone_exist == False:
+            phone = Operations.input_phone(self)
+            contacts[name] = phone
+            Controller.save_into_file(self, name)
+            print("Contact", name, "with phone:", phone, "created in phone book")
+        elif phone_exist == True:
+            print("Contact with the same name can't be created")
+
+    def read_contact(self):
+        name, phone_exist = Operations.check_contact(self)
+        if phone_exist == True:
+            return name, contacts[name]
+
+    def update_contact(self):
+        name, phone_exist = Operations.check_contact(self)
+        if phone_exist == True:
+            phone = Operations.input_phone(self)
+            contacts[name] = phone
+            Controller.save_into_file(self, name)
+            print("Contact", name, "has been updated with phone:", phone)
+
+    def delete_contact(self):
+        name, phone_exist = Operations.check_contact(self)
+        if phone_exist == True:
+            contacts.pop(name)
+            Controller.save_into_file(self, name)
+            print("Contact with name ", name, " has been removed")
+
+    def display_results(self):
+        print(Operations.read_contact(self))
+
+
+if __name__ == '__main__':
+    contacts = Controller.read_from_file(Controller)
+    Controller.choose_operation(Controller)
+
+
+# contacts = read_from_file()
+# alter_choose_operation()

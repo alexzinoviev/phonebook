@@ -74,13 +74,22 @@ class Operations:
         return input(param)
 
     def input_name(self):
-        return operations.input_values("Please enter Name: ")
+        return self.input_values("Please enter Name: ")
 
     def input_phone(self):
-        return operations.input_values("Please enter Phone: ")
+        while True:
+            phone = self.input_values("Please enter Phone: ")
+            try:
+                int(phone)
+                if len(phone) == 10:
+                    return phone
+                else:
+                    print("Length of the phone must be 10 symbols")
+            except ValueError:
+                print("Phone number should be numeric")
 
     def check_contact(self):
-        name = operations.input_name()
+        name = self.input_name()
         if name in contacts:
             phone_exist = True
             return name, phone_exist
@@ -120,7 +129,7 @@ class Operations:
             print("Contact with name ", name, " has been removed")
 
     def display_results(self):
-        print(operations.read_contact())
+        print(self.read_contact())
 
 
 if __name__ == '__main__':

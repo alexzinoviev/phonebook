@@ -100,22 +100,22 @@ class Operations:
 
     def create_contact(self):
         name, phone_exist = operations.check_contact()
-        if phone_exist == False:
+        if phone_exist is False:
             phone = operations.input_phone()
             contacts[name] = phone
             controller.save_into_file(name)
             print("Contact", name, "with phone:", phone, "created in phone book")
-        elif phone_exist == True:
+        else:
             print("Contact with the same name can't be created")
 
     def read_contact(self):
         name, phone_exist = operations.check_contact()
-        if phone_exist == True:
+        if phone_exist is True:
             return name, contacts[name]
 
     def update_contact(self):
         name, phone_exist = operations.check_contact()
-        if phone_exist == True:
+        if phone_exist is True:
             phone = operations.input_phone()
             contacts[name] = phone
             controller.save_into_file(name)
@@ -123,7 +123,7 @@ class Operations:
 
     def delete_contact(self):
         name, phone_exist = operations.check_contact()
-        if phone_exist == True:
+        if phone_exist is True:
             contacts.pop(name)
             controller.save_into_file(name)
             print("Contact with name ", name, " has been removed")

@@ -127,7 +127,3 @@ class Operations:
 if __name__ == '__main__':
     contacts = Controller.read_from_file(Controller)
     Controller.choose_operation(Controller)
-
-
-# contacts = read_from_file()
-# alter_choose_operation()

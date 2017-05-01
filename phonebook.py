@@ -3,39 +3,18 @@ import csv
 import configparser
 
 
-class Controller:
-    def read_config(self):
-        config = configparser.ConfigParser()
-        config.read('config.ini')
-        file_type = config['DEFAULT']['file_type']
-        return file_type
+class JSONFile:
+    def save_into_file(self, name):
+        with open('f.json', 'wt') as json_file:
+            json.dump(contacts, json_file)
 
     def read_from_file(self):
-        file_type = self.read_config()
-        if file_type == 'json':
-            return json_file.read_from_file()
-        elif file_type == 'csv':
-            return csv_file.read_from_file()
-
-    def save_into_file(self, name):
-        file_type = self.read_config()
-        if file_type == 'json':
-            json_file.save_into_file(name)
-        elif file_type == 'csv':
-            csv_file.save_into_file(name)
-
-    def choose_operation(self):
-        execute = False
-        possible_operations = {'C': operations.create_contact, 'R': operations.display_results,
-                               'U': operations.update_contact, 'D': operations.delete_contact, 'Q': quit}
-        while True:
-            chosen_operation = operations.input_values("Enter operation type: ")
-            for operation in possible_operations:
-                if chosen_operation == operation:
-                    execute = possible_operations[operation]
-                    execute()
-            if execute == False:
-                print(chosen_operation, "is unsupported operation. Please choose operation from C R U D")
+        try:
+            with open('f.json', 'rt') as file:
+                return json.load(file)
+        except FileNotFoundError:
+            print("Oops, file is absent")
+            return {}
 
 
 class CSVFile:
@@ -54,22 +33,7 @@ class CSVFile:
             print("Oops, file is absent")
             return {}
 
-
-class JSONFile:
-    def save_into_file(self, name):
-        with open('f.json', 'wt') as json_file:
-            json.dump(contacts, json_file)
-
-    def read_from_file(self):
-        try:
-            with open('f.json', 'rt') as file:
-                return json.load(file)
-        except FileNotFoundError:
-            print("Oops, file is absent")
-            return {}
-
-
-class Operations:
+class Operations():
     def input_values(self, param):
         return input(param)
 
@@ -99,37 +63,72 @@ class Operations:
             return name, phone_exist
 
     def create_contact(self):
-        name, phone_exist = operations.check_contact()
+        name, phone_exist = self.check_contact()
         if phone_exist is False:
-            phone = operations.input_phone()
+            phone = self.input_phone()
             contacts[name] = phone
-            controller.save_into_file(name)
+            Controller.save_into_file(self, name)
             print("Contact", name, "with phone:", phone, "created in phone book")
         else:
             print("Contact with the same name can't be created")
 
     def read_contact(self):
-        name, phone_exist = operations.check_contact()
+        name, phone_exist = self.check_contact()
         if phone_exist is True:
             return name, contacts[name]
 
     def update_contact(self):
-        name, phone_exist = operations.check_contact()
+        name, phone_exist = self.check_contact()
         if phone_exist is True:
-            phone = operations.input_phone()
+            phone = self.input_phone()
             contacts[name] = phone
-            controller.save_into_file(name)
+            Controller.save_into_file(self, name)
             print("Contact", name, "has been updated with phone:", phone)
 
     def delete_contact(self):
-        name, phone_exist = operations.check_contact()
+        name, phone_exist = self.check_contact()
         if phone_exist is True:
             contacts.pop(name)
-            controller.save_into_file(name)
+            Controller.save_into_file(self, name)
             print("Contact with name ", name, " has been removed")
 
     def display_results(self):
         print(self.read_contact())
+
+
+class Controller(JSONFile, CSVFile, Operations):
+    def read_config(self):
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+        file_type = config['DEFAULT']['file_type']
+        return file_type
+
+    def read_from_file(self):
+        file_type = self.read_config()
+        if file_type == 'json':
+            return JSONFile.read_from_file(self)
+        elif file_type == 'csv':
+            return CSVFile.read_from_file(self)
+
+    def save_into_file(self, name):
+        file_type = self.read_config()
+        if file_type == 'json':
+            JSONFile.save_into_file(self, name)
+        elif file_type == 'csv':
+            CSVFile.save_into_file(self, name)
+
+    def choose_operation(self):
+        execute = False
+        possible_operations = {'C': Operations.create_contact, 'R': Operations.display_results,
+                               'U': Operations.update_contact, 'D': Operations.delete_contact, 'Q': quit}
+        while True:
+            chosen_operation = Operations.input_values(self, "Enter operation type: ")
+            for operation in possible_operations:
+                if chosen_operation == operation:
+                    execute = possible_operations[operation]
+                    execute(self)
+            if execute == False:
+                print(chosen_operation, "is unsupported operation. Please choose operation from C R U D")
 
 
 if __name__ == '__main__':
@@ -137,7 +136,5 @@ if __name__ == '__main__':
     csv_file = CSVFile()
     controller = Controller()
     operations = Operations()
-
     contacts = controller.read_from_file()
-    print(contacts)
     controller.choose_operation()
